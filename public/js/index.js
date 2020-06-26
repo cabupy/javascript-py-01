@@ -106,23 +106,26 @@ function registerElements(elements, exampleName) {
     var city = form.querySelector('#city');
     var state = form.querySelector('#state');
     var zip = form.querySelector('#zip');
-    var additionalData = {
+    var payload = {
       name: name ? name.value : undefined,
       email: email ? email.value : undefined,
       address_line1: address1 ? address1.value : undefined,
       address_city: city ? city.value : undefined,
       address_state: state ? state.value : undefined,
-      address_zip: zip ? zip.value : undefined,
+      address_zip: zip ? zip.value : undefined
     };
 
-    console.log(additionalData);
+    console.log(`Lo que vamos a enviar: ${JSON.stringify(payload)}`);
+
+    //return
 
     // Creamos el token para procesar el pago.
-    stripe.createToken(elements[0], additionalData).then(function(result) {
+    stripe.createToken(elements[0], payload).then(function(result) {
       // Stop loading!
       example.classList.remove('submitting');
 
-      result['monto'] = 25;
+      // solo a modo de ejemplo ....
+      result['monto'] = 15;
 
       console.log(result);
 
@@ -142,14 +145,12 @@ function registerElements(elements, exampleName) {
         fetch('/pagar', fetchOptions)
           .then(res => res.json())
           .then(respuesta => {
-            console.log(respuesta)
+            console.log(respuesta);
+            example.classList.add('submitted');
           })
           .catch(err => {
             console.error(`Error: ${err}`)
           });
-
-
-        //example.classList.add('submitted');
       } else {
         // Otherwise, un-disable inputs.
         enableInputs();

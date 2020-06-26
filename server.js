@@ -45,9 +45,9 @@ const insertPago = async (payment) => {
   }
 }
 
-const updatePago = async (id, response_stripe) => {
+const updatePago = async (pago_id, cliente_id, response_stripe) => {
   try {
-    const strUpdate = `UPDATE public.pagos SET cliente_id=${id}, response_stripe = '${JSON.stringify(response_stripe)}', status='A' WHERE id = ${id} RETURNING *;`
+    const strUpdate = `UPDATE public.pagos SET cliente_id=${cliente_id}, response_stripe = '${JSON.stringify(response_stripe)}', status='A' WHERE id = ${pago_id} RETURNING *;`
     //console.log(strUpdate)
     const rows = await db.query(strUpdate)
     return rows
@@ -69,7 +69,7 @@ app.use('/', express.static(__dirname + '/public'))
 
 // aca las rutas
 app.post('/pagar', async(req, res) => {
-  console.log(req.body)
+  //console.log(req.body)
   try {
     //console.log(req.body)
     const rowCliente = await getClienteByEmail(req.body.token.email)
@@ -90,7 +90,7 @@ app.post('/pagar', async(req, res) => {
           source: req.body.token.id,
         })
         .then(async(cliente) => {
-          console.log(cliente)
+          //console.log(cliente)
           // aca tenemos que insertar el cliente.
           const rowInsCliente = await insertCliente(cliente)
           console.log(`Nuevo cliente con ID: ${rowInsCliente.data[0].id}`)
@@ -102,9 +102,9 @@ app.post('/pagar', async(req, res) => {
               description: `Compra de producto # .Cliente: ${req.body.token.card.name}`
             })
             .then(async(datos) => {
-              console.log(`charges to customer ${cliente.id}`)
+              console.log(`Pago recibido del cliente: ${cliente.id}: ${req.body.token.card.name}`)
               //console.log(JSON.stringify(datos))
-              const rowUpdatePago = await updatePago(cliente.id, datos)
+              const rowUpdatePago = await updatePago(pago_id, rowInsCliente.data[0].id, datos)
               //console.log(rowUpdatePayment)
               //console.log(JSON.parse(JSON.stringify(datos)))
               res.status(200).json({status: datos.status})
@@ -135,7 +135,7 @@ app.post('/pagar', async(req, res) => {
         })
         .then(async(datos) => {
           console.log(`Cargo al cliente ${cliente.stripe_id}: ${req.body.token.card.name}`)
-          const rowUpdatePago = await updatePago(cliente.id, datos)
+          const rowUpdatePago = await updatePago(pago_id, cliente.id, datos)
           res.status(200).json({status: datos.status})
         })
         .catch((err) => {
